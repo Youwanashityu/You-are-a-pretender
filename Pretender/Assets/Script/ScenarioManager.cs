@@ -58,6 +58,9 @@ public class ScenarioManager : MonoBehaviour
     public bool IsLastScene =>
         _currentSceneIndex >= _sceneOrder.Count - 1;
 
+    /// <summary>現在選択中の感情ラベル</summary>
+    public string SelectedEmotion => _selectedRow?.Emotion;
+
     // -------------------------------------------------------
     // Unity ライフサイクル
     // -------------------------------------------------------
@@ -164,6 +167,15 @@ public class ScenarioManager : MonoBehaviour
     public string GetTypingText()
     {
         return _selectedRow?.TypingText;
+    }
+
+    /// <summary>
+    /// コメント欄に表示する日本語テキストを返します。
+    /// SelectEmotionの後に呼んでください。
+    /// </summary>
+    public string GetDisplayText()
+    {
+        return _selectedRow?.DisplayText;
     }
 
     /// <summary>
