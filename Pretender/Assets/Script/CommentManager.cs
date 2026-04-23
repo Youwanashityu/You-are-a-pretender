@@ -20,13 +20,18 @@ public class CommentManager : MonoBehaviour
     // -------------------------------------------------------
 
     [Header("コメント欄UI")]
-    [SerializeField] private Transform _commentContainer;   // コメントを並べる親オブジェクト
-    [SerializeField] private GameObject _commentPrefab;     // コメント1行分のPrefab
-    [SerializeField] private int _maxCommentCount = 20;     // コメント欄に表示する最大件数
+    [Tooltip("コメントを縦に並べる親オブジェクト（ScrollViewのContentなど）")]
+    [SerializeField] private Transform _commentContainer;
+    [Tooltip("コメント1行分のPrefab")]
+    [SerializeField] private GameObject _commentPrefab;
+    [Tooltip("コメント欄に表示する最大件数（超えたら古いものから削除）")]
+    [SerializeField] private int _maxCommentCount = 20;
 
     [Header("ダミーコメント設定")]
-    [SerializeField] private float _dummyCommentInterval = 3f; // ダミーコメントが流れる間隔（秒）
-    [SerializeField] private bool _autoPlayDummy = true;        // 自動でダミーコメントを流すか
+    [Tooltip("ダミーコメントが流れる間隔（秒）")]
+    [SerializeField] private float _dummyCommentInterval = 3f;
+    [Tooltip("ONにすると起動時に自動でダミーコメントを流し始める")]
+    [SerializeField] private bool _autoPlayDummy = true;
 
     // -------------------------------------------------------
     // 内部データ

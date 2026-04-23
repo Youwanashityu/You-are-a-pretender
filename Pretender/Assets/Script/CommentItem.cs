@@ -12,20 +12,26 @@ public class CommentItem : MonoBehaviour
     // インスペクター設定
     // -------------------------------------------------------
 
-    [SerializeField] private TMP_Text _usernameText;    // ユーザー名テキスト
-    [SerializeField] private TMP_Text _commentText;     // コメントテキスト
-    [SerializeField] private Image _backgroundImage;    // 背景Image（スパチャ色に使う）
+    [Tooltip("ユーザー名を表示するテキスト")]
+    [SerializeField] private TMP_Text _usernameText;
+    [Tooltip("コメント本文を表示するテキスト")]
+    [SerializeField] private TMP_Text _commentText;
+    [Tooltip("スパチャ時の背景色に使うImageコンポーネント")]
+    [SerializeField] private Image _backgroundImage;
 
     // -------------------------------------------------------
     // コメントタイプ別の色設定（インスペクターから変更可能）
     // -------------------------------------------------------
 
     [Header("ユーザー名の色")]
-    [SerializeField] private Color _playerNameColor   = new Color(1f, 0.85f, 0f);    // 黄色
-    [SerializeField] private Color _dummyNameColor    = new Color(0.7f, 0.7f, 0.7f); // グレー
+    [Tooltip("主人公（プレイヤー）のユーザー名の色")]
+    [SerializeField] private Color _playerNameColor   = new Color(1f, 0.85f, 0f);
+    [Tooltip("ダミー視聴者のユーザー名の色")]
+    [SerializeField] private Color _dummyNameColor    = new Color(0.7f, 0.7f, 0.7f);
 
     [Header("背景色")]
-    [SerializeField] private Color _defaultBgColor    = new Color(0f, 0f, 0f, 0f);   // 透明
+    [Tooltip("スパチャなし時の背景色（デフォルトは透明）")]
+    [SerializeField] private Color _defaultBgColor    = new Color(0f, 0f, 0f, 0f);
 
     // -------------------------------------------------------
     // 公開メソッド
