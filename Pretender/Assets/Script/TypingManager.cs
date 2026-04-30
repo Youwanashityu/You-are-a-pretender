@@ -41,6 +41,9 @@ public class TypingManager : MonoBehaviour
     // 現在のひらがなで有効な候補を絞り込んだリスト
     private List<string> _activeCandidates = new List<string>();
 
+    // 確定した文字の実際の入力を記録するリスト（shiで打ったらshiと記録）
+    private List<string> _confirmedInputs = new List<string>();
+
     // -------------------------------------------------------
     // 公開プロパティ
     // -------------------------------------------------------
@@ -62,16 +65,52 @@ public class TypingManager : MonoBehaviour
     public string GetInputtedRomaji()
     {
         var sb = new System.Text.StringBuilder();
-        for (int i = 0; i < _hiraganaIndex; i++)
-        {
-            // 完了した文字は候補の先頭を使う
-            sb.Append(_romanCandidates[i][0]);
-        }
+
+        // 確定した文字は実際の入力を使う（shiで打ったらshi）
+        foreach (var confirmed in _confirmedInputs)
+            sb.Append(confirmed);
+
         // 現在入力中の文字の途中まで
         if (_hiraganaIndex < _romanCandidates.Count && _romanProgress > 0)
-        {
             sb.Append(_activeCandidates[0].Substring(0, _romanProgress));
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// 打った部分・未打ち部分を色分けしたリッチテキストを返します。
+    /// TMP_TextのInputTextに使ってください。
+    /// </summary>
+    /// <param name="typedColor">打った部分の色（例："#FFFFFF"）</param>
+    /// <param name="remainingColor">未打ち部分の色（例："#888888"）</param>
+    public string GetColoredRomaji(string typedColor = "#FFFFFF", string remainingColor = "#888888")
+    {
+        var sb = new System.Text.StringBuilder();
+
+        // 確定した文字は実際の入力を使う（shiで打ったらshi）
+        foreach (var confirmed in _confirmedInputs)
+            sb.Append($"<color={typedColor}>{confirmed}</color>");
+
+        if (_hiraganaIndex < _romanCandidates.Count)
+        {
+            // 現在打っている文字の打ち済み部分（白）
+            if (_romanProgress > 0)
+            {
+                var inProgress = _activeCandidates[0].Substring(0, _romanProgress);
+                sb.Append($"<color={typedColor}>{inProgress}</color>");
+            }
+
+            // 現在打っている文字の残り部分（グレー）
+            var remaining = _activeCandidates[0].Substring(_romanProgress);
+            sb.Append($"<color={remainingColor}>{remaining}</color>");
+
+            // まだ打っていない文字（グレー）
+            for (int i = _hiraganaIndex + 1; i < _romanCandidates.Count; i++)
+            {
+                sb.Append($"<color={remainingColor}>{_romanCandidates[i][0]}</color>");
+            }
         }
+
         return sb.ToString();
     }
 
@@ -88,6 +127,7 @@ public class TypingManager : MonoBehaviour
         _hiragana         = hiragana;
         _hiraganaIndex    = 0;
         _romanProgress    = 0;
+        _confirmedInputs  = new List<string>();
         _romanCandidates  = BuildRomanCandidates(hiragana);
         _activeCandidates = _hiraganaIndex < _romanCandidates.Count
             ? new List<string>(_romanCandidates[_hiraganaIndex])
@@ -150,6 +190,9 @@ public class TypingManager : MonoBehaviour
 
         if (finished)
         {
+            // 実際に打ったローマ字を記録
+            _confirmedInputs.Add(_activeCandidates[0].Substring(0, _romanProgress));
+
             _hiraganaIndex++;
             _romanProgress = 0;
             _activeCandidates = _hiraganaIndex < _romanCandidates.Count

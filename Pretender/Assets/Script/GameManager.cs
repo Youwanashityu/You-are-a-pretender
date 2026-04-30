@@ -129,6 +129,10 @@ public class GameManager : MonoBehaviour
         var typingText = _scenarioManager.GetTypingText();
         _typingManager.SetText(typingText);
 
+        // タイピング開始時に色分けローマ字を初期表示
+        if (_inputText != null)
+            _inputText.text = _typingManager.GetColoredRomaji();
+
         ShowTypingPanel();
         ChangeState(GameState.Typing);
     }
@@ -205,7 +209,7 @@ public class GameManager : MonoBehaviour
     private void OnTypingProgress(float progress)
     {
         if (_inputText != null)
-            _inputText.text = _typingManager.GetInputtedRomaji();
+            _inputText.text = _typingManager.GetColoredRomaji();
     }
 
     private void OnTypingComplete()
