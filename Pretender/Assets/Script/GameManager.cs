@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// ゲーム全体の進行を統括するクラス。
@@ -43,6 +46,25 @@ public class GameManager : MonoBehaviour
     [Tooltip("リアクション表示後、次のシーンへ進むまでの待機時間（秒）")]
     [SerializeField] private float _nextSceneDelay = 4f;
 
+    [Header("UI参照")]
+    [Tooltip("感情・スパチャボタンが並ぶパネル")]
+    [SerializeField] private GameObject _selectionPanel;
+
+    [Tooltip("お題と入力が表示されるパネル")]
+    [SerializeField] private GameObject _typingPanel;
+
+    [Tooltip("感情ボタンを並べる親オブジェクト（Horizontal Layout Group付き）")]
+    [SerializeField] private Transform _emotionButtonsParent;
+
+    [Tooltip("感情ボタン1個分のPrefab")]
+    [SerializeField] private GameObject _emotionButtonPrefab;
+
+    [Tooltip("お題テキスト（display_textを表示）")]
+    [SerializeField] private TMP_Text _displayText;
+
+    [Tooltip("プレイヤーの入力を表示するテキスト")]
+    [SerializeField] private TMP_Text _inputText;
+
     // -------------------------------------------------------
     // 公開プロパティ
     // -------------------------------------------------------
@@ -54,8 +76,8 @@ public class GameManager : MonoBehaviour
     // 内部データ
     // -------------------------------------------------------
 
-    // 現在選択中のスパチャ色（nullならスパチャなし）
     private Color? _currentSuperchatColor = null;
+    private List<GameObject> _emotionButtons = new List<GameObject>();
 
     // -------------------------------------------------------
     // Unity ライフサイクル
@@ -63,16 +85,14 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // タイピング完了イベントを登録
         _typingManager.OnComplete += OnTypingComplete;
+        _typingManager.OnProgress += OnTypingProgress;
 
-        // 最初のシーンを開始
         StartCurrentScene();
     }
 
     private void Update()
     {
-        // タイピング中のみ入力を受け付ける
         if (CurrentState == GameState.Typing)
             _typingManager.Input(Input.inputString);
     }
@@ -80,7 +100,10 @@ public class GameManager : MonoBehaviour
     private void OnDestroy()
     {
         if (_typingManager != null)
+        {
             _typingManager.OnComplete -= OnTypingComplete;
+            _typingManager.OnProgress -= OnTypingProgress;
+        }
     }
 
     // -------------------------------------------------------
@@ -90,7 +113,6 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// 感情ボタンが押されたときに呼びます。
     /// </summary>
-    /// <param name="emotion">選択した感情ラベル（例："好意"）</param>
     public void OnEmotionSelected(string emotion)
     {
         if (CurrentState != GameState.EmotionSelect) return;
@@ -98,17 +120,22 @@ public class GameManager : MonoBehaviour
         var displayText = _scenarioManager.SelectEmotion(emotion);
         if (displayText == null) return;
 
+        if (_displayText != null)
+            _displayText.text = displayText;
+
+        if (_inputText != null)
+            _inputText.text = string.Empty;
+
         var typingText = _scenarioManager.GetTypingText();
         _typingManager.SetText(typingText);
 
+        ShowTypingPanel();
         ChangeState(GameState.Typing);
     }
 
     /// <summary>
     /// スパチャ額ボタンが押されたときに呼びます。
-    /// 感情選択前に呼んでください。
     /// </summary>
-    /// <param name="color">スパチャの背景色</param>
     public void OnSuperchatSelected(Color color)
     {
         _currentSuperchatColor = color;
@@ -126,56 +153,75 @@ public class GameManager : MonoBehaviour
     // 内部処理
     // -------------------------------------------------------
 
-    /// <summary>
-    /// 現在のシーンを開始します。
-    /// </summary>
     private void StartCurrentScene()
     {
-        // 配信者のみ喋るシーンの場合
         if (_scenarioManager.IsStreamerOnlyScene())
         {
             var reaction = _scenarioManager.GetStreamerReaction();
             _streamerDialogueController.Show(reaction);
             ChangeState(GameState.Reaction);
-
-            // 一定時間後に次のシーンへ
             Invoke(nameof(GoToNextScene), _nextSceneDelay);
             return;
         }
 
-        // 通常シーン：感情選択待ち
+        GenerateEmotionButtons();
+        ShowSelectionPanel();
         ChangeState(GameState.EmotionSelect);
     }
 
     /// <summary>
-    /// タイピング完了時に呼ばれます。
+    /// CSVの感情リストからボタンを動的に生成します。
     /// </summary>
+    private void GenerateEmotionButtons()
+    {
+        foreach (var btn in _emotionButtons)
+        {
+            if (btn != null) Destroy(btn);
+        }
+        _emotionButtons.Clear();
+
+        if (_emotionButtonPrefab == null || _emotionButtonsParent == null) return;
+
+        var emotions = _scenarioManager.GetCurrentEmotions();
+
+        foreach (var emotion in emotions)
+        {
+            var obj = Instantiate(_emotionButtonPrefab, _emotionButtonsParent);
+            _emotionButtons.Add(obj);
+
+            var label = obj.GetComponentInChildren<TMP_Text>();
+            if (label != null)
+                label.text = emotion;
+
+            var button = obj.GetComponent<Button>();
+            if (button != null)
+            {
+                var capturedEmotion = emotion;
+                button.onClick.AddListener(() => OnEmotionSelected(capturedEmotion));
+            }
+        }
+    }
+
+    private void OnTypingProgress(float progress)
+    {
+        if (_inputText != null)
+            _inputText.text = _typingManager.GetInputtedRomaji();
+    }
+
     private void OnTypingComplete()
     {
-        // 打ったコメント（display_text）をコメント欄に追加
         var displayText = _scenarioManager.GetDisplayText();
-        _commentManager.AddPlayerComment(
-            _playerUsername,
-            displayText,
-            _currentSuperchatColor
-        );
+        _commentManager.AddPlayerComment(_playerUsername, displayText, _currentSuperchatColor);
 
-        // スパチャ色をリセット
         _currentSuperchatColor = null;
 
-        // 配信者リアクションを表示
         var reaction = _scenarioManager.GetStreamerReaction();
         _streamerDialogueController.Show(reaction);
 
         ChangeState(GameState.Reaction);
-
-        // 一定時間後に次のシーンへ
         Invoke(nameof(GoToNextScene), _nextSceneDelay);
     }
 
-    /// <summary>
-    /// 次のシーンへ進みます。
-    /// </summary>
     private void GoToNextScene()
     {
         if (_scenarioManager.IsLastScene)
@@ -189,18 +235,24 @@ public class GameManager : MonoBehaviour
         StartCurrentScene();
     }
 
-    /// <summary>
-    /// ゲーム終了時の処理。
-    /// </summary>
     private void OnGameFinished()
     {
         Debug.Log("[GameManager] ゲームクリア！");
         // TODO: エンディング演出やシーン遷移をここに追加
     }
 
-    /// <summary>
-    /// ゲームの状態を変更します。
-    /// </summary>
+    private void ShowSelectionPanel()
+    {
+        if (_selectionPanel != null) _selectionPanel.SetActive(true);
+        if (_typingPanel != null)    _typingPanel.SetActive(false);
+    }
+
+    private void ShowTypingPanel()
+    {
+        if (_selectionPanel != null) _selectionPanel.SetActive(false);
+        if (_typingPanel != null)    _typingPanel.SetActive(true);
+    }
+
     private void ChangeState(GameState newState)
     {
         CurrentState = newState;

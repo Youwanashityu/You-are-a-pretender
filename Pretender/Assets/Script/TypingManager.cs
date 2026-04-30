@@ -55,6 +55,26 @@ public class TypingManager : MonoBehaviour
     public float Progress => _romanCandidates.Count == 0 ? 0f
         : (float)_hiraganaIndex / _romanCandidates.Count;
 
+    /// <summary>
+    /// これまでに入力されたローマ字文字列を返します。
+    /// InputTextの表示に使ってください。
+    /// </summary>
+    public string GetInputtedRomaji()
+    {
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < _hiraganaIndex; i++)
+        {
+            // 完了した文字は候補の先頭を使う
+            sb.Append(_romanCandidates[i][0]);
+        }
+        // 現在入力中の文字の途中まで
+        if (_hiraganaIndex < _romanCandidates.Count && _romanProgress > 0)
+        {
+            sb.Append(_activeCandidates[0].Substring(0, _romanProgress));
+        }
+        return sb.ToString();
+    }
+
     // -------------------------------------------------------
     // 公開メソッド
     // -------------------------------------------------------
