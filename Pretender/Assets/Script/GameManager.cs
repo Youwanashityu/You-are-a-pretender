@@ -38,6 +38,9 @@ public class GameManager : MonoBehaviour
     [Tooltip("配信者の発言を表示するStreamerDialogueController")]
     [SerializeField] private StreamerDialogueController _streamerDialogueController;
 
+    [Tooltip("配信者の立ち絵を管理するLiverImageController")]
+    [SerializeField] private LiverImageController _liverImageController;
+
     [Header("プレイヤー設定")]
     [Tooltip("コメント欄に表示される主人公のユーザー名")]
     [SerializeField] private string _playerUsername = "名無し";
@@ -129,6 +132,9 @@ public class GameManager : MonoBehaviour
         var typingText = _scenarioManager.GetTypingText();
         _typingManager.SetText(typingText);
 
+        // 感情に対応した立ち絵に切り替え
+        _liverImageController?.SetImage(_scenarioManager.GetImageType());
+
         // タイピング開始時に色分けローマ字を初期表示
         if (_inputText != null)
             _inputText.text = _typingManager.GetColoredRomaji();
@@ -168,6 +174,9 @@ public class GameManager : MonoBehaviour
 
     private void StartCurrentScene()
     {
+        // 立ち絵を切り替え
+        _liverImageController?.SetImage(_scenarioManager.GetImageType());
+
         if (_scenarioManager.IsStreamerOnlyScene())
         {
             var reaction = _scenarioManager.GetStreamerReaction();

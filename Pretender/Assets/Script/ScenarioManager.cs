@@ -27,6 +27,7 @@ public class ScenarioManager : MonoBehaviour
     {
         public string SceneId;           // シーンID
         public string Emotion;           // 感情ラベル（好意・揶揄う・応援・挨拶）
+        public string ImageType;         // 立ち絵の差分名
         public string DisplayText;       // 画面に表示する日本語テキスト
         public string TypingText;        // タイピング判定に使うひらがなテキスト
         public string StreamerReaction;  // 配信者のリアクション
@@ -86,16 +87,18 @@ public class ScenarioManager : MonoBehaviour
 
         foreach (var row in rows)
         {
-            var sceneId         = row["scene_id"];
-            var emotion         = row["emotion"];
-            var displayText     = row["display_text"];
-            var typingText      = row["typing_text"];
+            var sceneId          = row["scene_id"];
+            var emotion          = row["emotion"];
+            var imageType        = row["image_type"];
+            var displayText      = row["display_text"];
+            var typingText       = row["typing_text"];
             var streamerReaction = row["streamer_reaction"];
 
             var scenarioRow = new ScenarioRow
             {
                 SceneId          = sceneId,
                 Emotion          = emotion,
+                ImageType        = imageType,
                 DisplayText      = displayText,
                 TypingText       = typingText,
                 StreamerReaction = streamerReaction,
@@ -176,6 +179,22 @@ public class ScenarioManager : MonoBehaviour
     public string GetDisplayText()
     {
         return _selectedRow?.DisplayText;
+    }
+
+    /// <summary>
+    /// 立ち絵の差分名を返します。
+    /// シーン開始時やSelectEmotionの後に呼んでください。
+    /// </summary>
+    public string GetImageType()
+    {
+        // 選択中の行があればそれを返す、なければシーンの先頭行を返す
+        if (_selectedRow != null)
+            return _selectedRow.ImageType;
+
+        if (_scenarioData.TryGetValue(CurrentSceneId, out var rows))
+            return rows.FirstOrDefault()?.ImageType;
+
+        return null;
     }
 
     /// <summary>
