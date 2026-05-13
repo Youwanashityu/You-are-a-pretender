@@ -153,6 +153,15 @@ public class GameManager : MonoBehaviour
         _currentSuperchatColor = null;
     }
 
+    /// <summary>¥500スパチャが選択されたときに呼びます。</summary>
+    public void OnSuperchat500() => OnSuperchatSelected(new Color(0.1f, 0.7f, 0.9f)); // 水色
+
+    /// <summary>¥1000スパチャが選択されたときに呼びます。</summary>
+    public void OnSuperchat1000() => OnSuperchatSelected(new Color(0.1f, 0.8f, 0.4f)); // 緑
+
+    /// <summary>¥5000スパチャが選択されたときに呼びます。</summary>
+    public void OnSuperchat5000() => OnSuperchatSelected(new Color(1f, 0.8f, 0f)); // 黄色
+
     // -------------------------------------------------------
     // 内部処理
     // -------------------------------------------------------
